@@ -53,10 +53,16 @@ pub enum Commands {
         #[arg(short, long)]
         author: String,
     },
+
     /// 👀 Who wrote which lines of a file
     BlameSummary {
+        /// 📄 File to analyze (inside the repo)
         #[arg(short, long)]
         file: String,
+
+        /// 📁 Path to the Git repo
+        #[arg(short, long, default_value = ".")]
+        path: String,
 
         #[arg(long)]
         json: bool,
@@ -64,30 +70,50 @@ pub enum Commands {
 
     /// 📁 Per-author commit heatmap by file
     FileContributions {
+        /// 📁 Path to the Git repo
+        #[arg(short, long, default_value = ".")]
+        path: String,
+
         #[arg(long)]
         json: bool,
     },
 
     /// 🕒 Commit time-of-day distribution
     CommitTimes {
+        /// 📁 Path to the Git repo
+        #[arg(short, long, default_value = ".")]
+        path: String,
+
         #[arg(long)]
         json: bool,
     },
 
     /// 🥇 First commit by each author
     FirstCommits {
+        /// 📁 Path to the Git repo
+        #[arg(short, long, default_value = ".")]
+        path: String,
+
         #[arg(long)]
         json: bool,
     },
 
     /// 🤝 Top co-authors (shared files)
     TopCoauthors {
+        /// 📁 Path to the Git repo
+        #[arg(short, long, default_value = ".")]
+        path: String,
+
         #[arg(long)]
         json: bool,
     },
 
     /// 🚍 Bus factor warnings
     BusFactor {
+        /// 📁 Path to the Git repo
+        #[arg(short, long, default_value = ".")]
+        path: String,
+
         #[arg(long)]
         json: bool,
 
@@ -96,3 +122,4 @@ pub enum Commands {
         threshold: f64,
     },
 }
+

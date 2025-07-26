@@ -153,13 +153,13 @@ fn count_all_commits(repo: &Repository) -> usize {
     revwalk.count()
 }
 
-pub fn blame_summary(file: &str, json: bool) {
-    let repo = open_repo_or_die(".");
-    let path = Path::new(file);
+pub fn blame_summary(repo_path: &str, file: &str, json: bool) {
+    let repo = open_repo_or_die(repo_path);
+    let file_path = Path::new(file);
 
     let mut opts = BlameOptions::new();
     let blame = repo
-        .blame_file(path, Some(&mut opts))
+        .blame_file(file_path, Some(&mut opts))
         .expect("Could not blame file");
 
     let mut counts: BTreeMap<String, usize> = BTreeMap::new();
