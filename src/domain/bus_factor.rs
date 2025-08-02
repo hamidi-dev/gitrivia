@@ -9,9 +9,9 @@ use rayon::prelude::*;
 
 const MIN_LINES: usize = 25; // ignore trivial files
 const ALLOWED_EXT: &[&str] = &[
-    "rs","ts","tsx","js","jsx","java","kt","kts","go","py","rb","swift",
-    "c","h","cpp","hpp","cc","hh","cs","php","scala","m","mm",
-    "sh","bash","zsh","fish","sql","xml","yml","yaml","toml","json"
+    "rs", "ts", "tsx", "js", "jsx", "java", "kt", "kts", "go", "py", "rb", "swift", "c", "h",
+    "cpp", "hpp", "cc", "hh", "cs", "php", "scala", "m", "mm", "sh", "bash", "zsh", "fish", "sql",
+    "xml", "yml", "yaml", "toml", "json", "lua", "vim", "conf", "ini", "cfg", "md",
 ];
 
 #[derive(Debug, Clone)]
@@ -25,7 +25,8 @@ pub struct BusScore {
 /// Collect repo-tracked files, filtered by extension.
 fn list_repo_files(repo_path: &str) -> Result<Vec<String>> {
     let output = Command::new("git")
-        .arg("-C").arg(repo_path)
+        .arg("-C")
+        .arg(repo_path)
         .arg("ls-files")
         .output()
         .context("failed to run `git ls-files`")?;
@@ -103,24 +104,48 @@ pub fn compute_scores_fast(repo: &Repository, max_commits: Option<usize>) -> Res
     let mut seen = 0usize;
     for oid in walk.flatten() {
         if let Some(m) = max_commits {
-            if seen >= m { break; }
+            if seen >= m {
+                break;
+            }
         }
-        let commit = match repo.find_commit(oid) { Ok(c) => c, Err(_) => continue };
+        let commit = match repo.find_commit(oid) {
+            Ok(c) => c,
+            Err(_) => continue,
+        };
         let email = commit.author().email().unwrap_or("unknown").to_string();
 
-        let tree = match commit.tree() { Ok(t) => t, Err(_) => continue };
+        let tree = match commit.tree() {
+            Ok(t) => t,
+            Err(_) => continue,
+        };
         if let Ok(parent) = commit.parent(0) {
-            let parent_tree = match parent.tree() { Ok(t) => t, Err(_) => continue };
+            let parent_tree = match parent.tree() {
+                Ok(t) => t,
+                Err(_) => continue,
+            };
             let mut opt = DiffOptions::new();
             // we only need paths; no per-line stats
-            if let Ok(diff) = repo.diff_tree_to_tree(Some(&parent_tree), Some(&tree), Some(&mut opt)) {
+            if let Ok(diff) =
+                repo.diff_tree_to_tree(Some(&parent_tree), Some(&tree), Some(&mut opt))
+            {
                 for d in diff.deltas() {
                     if let Some(path) = d.new_file().path().or_else(|| d.old_file().path()) {
                         if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
-                            if !ALLOWED_EXT.contains(&ext) { continue; }
-                        } else { continue; }
-                        let path_str = match path.to_str() { Some(s) => s.to_string(), None => continue };
-                        *touches.entry(path_str).or_default().entry(email.clone()).or_default() += 1;
+                            if !ALLOWED_EXT.contains(&ext) {
+                                continue;
+                            }
+                        } else {
+                            continue;
+                        }
+                        let path_str = match path.to_str() {
+                            Some(s) => s.to_string(),
+                            None => continue,
+                        };
+                        *touches
+                            .entry(path_str)
+                            .or_default()
+                            .entry(email.clone())
+                            .or_default() += 1;
                     }
                 }
             }
@@ -131,7 +156,9 @@ pub fn compute_scores_fast(repo: &Repository, max_commits: Option<usize>) -> Res
     let mut scores = Vec::<BusScore>::new();
     for (file, by_author) in touches {
         let total: usize = by_author.values().sum();
-        if total == 0 { continue; }
+        if total == 0 {
+            continue;
+        }
         if let Some((top_author, top)) = by_author.into_iter().max_by_key(|(_, n)| *n) {
             scores.push(BusScore {
                 file,
@@ -152,9 +179,11 @@ pub fn compute_scores_fast(repo: &Repository, max_commits: Option<usize>) -> Res
 }
 
 /// Backward-compatible: only return those above threshold (from parallel blame).
-pub fn bus_factor(repo_path: &str, repo: &Repository, threshold: f64)
-    -> Result<BTreeMap<String, (String, f64)>>
-{
+pub fn bus_factor(
+    repo_path: &str,
+    repo: &Repository,
+    threshold: f64,
+) -> Result<BTreeMap<String, (String, f64)>> {
     if !(0.0..=1.0).contains(&threshold) {
         bail!("threshold must be in [0.0, 1.0]");
     }
@@ -167,9 +196,9 @@ pub fn bus_factor(repo_path: &str, repo: &Repository, threshold: f64)
 }
 
 pub fn as_busfactor_json(map: &BTreeMap<String, (String, f64)>) -> String {
-    let as_json: BTreeMap<_, _> = map.iter()
-        .map(|(f,(a,r))| (f.clone(), json!({ "author": a, "ownership": r })))
+    let as_json: BTreeMap<_, _> = map
+        .iter()
+        .map(|(f, (a, r))| (f.clone(), json!({ "author": a, "ownership": r })))
         .collect();
     serde_json::to_string_pretty(&as_json).unwrap()
 }
-
