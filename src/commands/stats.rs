@@ -12,7 +12,7 @@ use crate::{
 #[derive(Debug, Args)]
 pub struct Stats {
     /// Path to the Git repo
-    #[arg(short, long, default_value=".")]
+    #[arg(short, long, default_value = ".")]
     pub path: String,
 
     /// Max number of commits to inspect (default: all)
@@ -31,11 +31,25 @@ impl super::Runnable for Stats {
 
         if g.json {
             // Build top-5 authors sorted desc by count
-            let mut top_vec = scan.stats.data.iter().map(|(email, m)| {
-                (email.clone(), m.count, m.first, m.last)
-            }).collect::<Vec<_>>();
+            let mut top_vec = scan
+                .stats
+                .data
+                .iter()
+                .map(|(email, m)| (email.clone(), m.count, m.first, m.last))
+                .collect::<Vec<_>>();
             top_vec.sort_by(|a, b| b.1.cmp(&a.1));
             let top_vec = top_vec.into_iter().take(5).map(|(email, count, first, last)| {
+                json!({"email": email, "count": count, "first": fmt_date(first), "last": fmt_date(last)})
+            }).collect::<Vec<_>>();
+
+            let mut top12 = scan
+                .recent12
+                .data
+                .iter()
+                .map(|(email, m)| (email.clone(), m.count, m.first, m.last))
+                .collect::<Vec<_>>();
+            top12.sort_by(|a, b| b.1.cmp(&a.1));
+            let top12 = top12.into_iter().take(5).map(|(email, count, first, last)| {
                 json!({"email": email, "count": count, "first": fmt_date(first), "last": fmt_date(last)})
             }).collect::<Vec<_>>();
 
@@ -79,7 +93,8 @@ impl super::Runnable for Stats {
                     "top_recent_30d": s.top_recent_30d.as_ref()
                         .map(|(a,c)| json!({"author": a, "commits": c}))
                 },
-                "top_5_authors": top_vec
+                    "top_5_authors_last_12m": top12,
+                    "top_5_authors": top_vec
             });
             println!("{}", serde_json::to_string_pretty(&payload)?);
             return Ok(());
@@ -89,8 +104,16 @@ impl super::Runnable for Stats {
         let s = &scan.summary;
 
         println!("✨ Repo summary");
-        println!("  First commit:     {} by {}", fmt_date(s.first_date), s.first_author);
-        println!("  Last commit:      {} by {}", fmt_date(s.last_date),  s.last_author);
+        println!(
+            "  First commit:     {} by {}",
+            fmt_date(s.first_date),
+            s.first_author
+        );
+        println!(
+            "  Last commit:      {} by {}",
+            fmt_date(s.last_date),
+            s.last_author
+        );
         println!("  Total commits:    {}", s.total_commits);
         println!("  Contributors:     {}", s.contributors_total);
         println!("  Active period:    {} days", s.active_days);
@@ -98,9 +121,14 @@ impl super::Runnable for Stats {
         if let Some((d, c)) = s.peak_day {
             println!("  Peak day:         {} ({} commits)", d, c);
         }
-        println!("  Longest idle gap: {} days (largest pause between commits)", s.longest_idle_gap_days);
-        println!("  Momentum (90d):   {:.1}% of all commits, {} authors active",
-                 s.momentum_90d_pct, s.active_authors_last_90d);
+        println!(
+            "  Longest idle gap: {} days (largest pause between commits)",
+            s.longest_idle_gap_days
+        );
+        println!(
+            "  Momentum (90d):   {:.1}% of all commits, {} authors active",
+            s.momentum_90d_pct, s.active_authors_last_90d
+        );
         if let Some((a, c)) = &s.top_recent_30d {
             println!("  Top last 30d:     {} ({} commits)", a, c);
         }
@@ -108,8 +136,14 @@ impl super::Runnable for Stats {
         println!();
         println!("👥 Contributors");
         println!("  Drive-by ratio:   {:.0}%  (share of authors with ≤2 commits; many = lots of one-offs)", s.drive_by_ratio);
-        println!("  Core size (80%):  {}     (few = concentrated, many = distributed)", s.core_size_80pct);
-        println!("  Concentration:    HHI {:.2}  |  Gini {:.2}  (higher = more concentrated)", s.hhi, s.gini);
+        println!(
+            "  Core size (80%):  {}     (few = concentrated, many = distributed)",
+            s.core_size_80pct
+        );
+        println!(
+            "  Concentration:    HHI {:.2}  |  Gini {:.2}  (higher = more concentrated)",
+            s.hhi, s.gini
+        );
 
         println!();
         let wc = s.weekday_counts;
@@ -122,7 +156,10 @@ impl super::Runnable for Stats {
 
         println!();
         println!("🔀 Merge/Revert");
-        println!("  Merge rate:  {:.0}%   Revert rate: {:.1}%", s.merge_rate, s.revert_rate);
+        println!(
+            "  Merge rate:  {:.0}%   Revert rate: {:.1}%",
+            s.merge_rate, s.revert_rate
+        );
 
         println!();
         println!("📝 Messages");
@@ -131,17 +168,26 @@ impl super::Runnable for Stats {
         println!("  Conventional commits:  {:.0}%", s.conv_commit_pct);
 
         println!();
-        println!("🔥 Top 5 authors:");
+        println!("🔥 Top 5 authors (last 12 months):");
+        if scan.recent12.data.is_empty() {
+            println!("(no commits in the last 12 months)");
+        } else {
+            println!("{}", table::author_stats_top(&scan.recent12, true, 5));
+        }
+
+        println!();
+        println!("🔥 Top 5 authors (all time):");
         // Force DESC for “Top 5”
         println!("{}", table::author_stats_top(&scan.stats, true, 5));
 
         // Tiny legend
         println!("\nLegend:");
-        println!("  Drive-by ratio = Authors with ≤2 commits (higher → many one-off contributors).");
+        println!(
+            "  Drive-by ratio = Authors with ≤2 commits (higher → many one-off contributors)."
+        );
         println!("  Core size (80%) = Minimal number of authors covering 80% of commits.");
         println!("  HHI/Gini = Contribution concentration (higher → more concentrated).");
 
         Ok(())
     }
 }
-
