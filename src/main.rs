@@ -21,6 +21,7 @@ fn main() -> anyhow::Result<()> {
         cli::CliCommand::FirstCommits(c)      => c.run(&g),
         cli::CliCommand::TopCoauthors(c)      => c.run(&g),
         cli::CliCommand::BusFactor(c)         => c.run(&g),
+        cli::CliCommand::Churn(c)             => c.run(&g),
     }
 }
 

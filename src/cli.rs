@@ -9,11 +9,11 @@ use crate::commands;
     arg_required_else_help = true
 )]
 pub struct Cli {
-    /// Output JSON instead of human-readable text (global)
+    /// Global JSON output (works with any subcommand)
     #[arg(long, global = true)]
     pub json: bool,
 
-    /// Sort descending when applicable (global)
+    /// Global default for descending sort where applicable
     #[arg(long, global = true)]
     pub desc: bool,
 
@@ -47,7 +47,10 @@ pub enum CliCommand {
     /// 🤝 Top co-authors (shared files)
     TopCoauthors(commands::TopCoauthors),
 
-    /// 🚍 Bus factor warnings
+    /// 🚍 Bus factor warnings (file or directory)
     BusFactor(commands::BusFactor),
+
+    /// ♨️ Churn (recent file/directory volatility)
+    Churn(commands::Churn),
 }
 

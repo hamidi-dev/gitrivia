@@ -1,8 +1,10 @@
 use anyhow::Result;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Default)]
 pub struct Global {
+    /// Global JSON output toggle (overrides per-command flags)
     pub json: bool,
+    /// Global default for “descending” ordering in commands that support it
     pub desc: bool,
 }
 
@@ -19,6 +21,7 @@ pub mod commit_times;
 pub mod first_commits;
 pub mod top_coauthors;
 pub mod bus_factor;
+pub mod churn;
 
 pub use stats::Stats;
 pub use top_authors::TopAuthors;
@@ -29,4 +32,4 @@ pub use commit_times::CommitTimes;
 pub use first_commits::FirstCommits;
 pub use top_coauthors::TopCoauthors;
 pub use bus_factor::BusFactor;
-
+pub use churn::Churn;

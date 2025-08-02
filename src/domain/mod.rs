@@ -6,4 +6,5 @@ pub mod times;
 pub mod firsts;
 pub mod coauthors;
 pub mod bus_factor;
+pub mod churn;
 
