@@ -1,49 +1,26 @@
-mod analysis;
-mod cli;
 mod utils;
+mod domain;
+mod presentation;
+mod commands;
+mod cli;
 
 use clap::Parser;
-use cli::{Cli, Commands};
+use commands::{Runnable, Global};
 
-fn main() {
-    let cli = Cli::parse();
+fn main() -> anyhow::Result<()> {
+    let cli = cli::Cli::parse();
+    let g = Global { json: cli.json, desc: cli.desc };
 
     match cli.command {
-        Commands::Stats { path, limit, sort_desc } => {
-            analysis::print_stats(&path, limit, sort_desc);
-        }
-
-        Commands::TopAuthors { path, since } => {
-            analysis::top_authors(&path, since);
-        }
-
-        Commands::AuthorActivity { path, author } => {
-            analysis::author_activity(&path, &author);
-        }
-
-        Commands::BlameSummary { path, file, json } => {
-            analysis::blame_summary(&path, &file, json);
-        }
-
-        Commands::FileContributions { path, json } => {
-            analysis::file_contributions(&path, json);
-        }
-
-        Commands::CommitTimes { path, json } => {
-            analysis::commit_times(&path, json);
-        }
-
-        Commands::FirstCommits { path, json } => {
-            analysis::first_commits(&path, json);
-        }
-
-        Commands::TopCoauthors { path, json } => {
-            analysis::top_coauthors(&path, json);
-        }
-
-        Commands::BusFactor { path, json, threshold } => {
-            analysis::bus_factor(&path, json, threshold);
-        }
+        cli::CliCommand::Stats(c)             => c.run(&g),
+        cli::CliCommand::TopAuthors(c)        => c.run(&g),
+        cli::CliCommand::AuthorActivity(c)    => c.run(&g),
+        cli::CliCommand::BlameSummary(c)      => c.run(&g),
+        cli::CliCommand::FileContributions(c) => c.run(&g),
+        cli::CliCommand::CommitTimes(c)       => c.run(&g),
+        cli::CliCommand::FirstCommits(c)      => c.run(&g),
+        cli::CliCommand::TopCoauthors(c)      => c.run(&g),
+        cli::CliCommand::BusFactor(c)         => c.run(&g),
     }
 }
 

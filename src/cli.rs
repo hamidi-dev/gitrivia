@@ -1,125 +1,53 @@
-use chrono::NaiveDate;
 use clap::{Parser, Subcommand};
+use crate::commands;
 
-/// 🔍 Git repository activity explorer
 #[derive(Parser)]
 #[command(
     name = "gitrivia",
     version,
     about = "✨ Explore who did what, when — in any Git repo",
-    long_about = None,
     arg_required_else_help = true
 )]
 pub struct Cli {
+    /// Output JSON instead of human-readable text (global)
+    #[arg(long, global = true)]
+    pub json: bool,
+
+    /// Sort descending when applicable (global)
+    #[arg(long, global = true)]
+    pub desc: bool,
+
     #[command(subcommand)]
-    pub command: Commands,
+    pub command: CliCommand,
 }
 
 #[derive(Subcommand)]
-pub enum Commands {
+pub enum CliCommand {
     /// 📊 Overall commit stats per author
-    Stats {
-        /// 📁 Path to the Git repo
-        #[arg(short, long, default_value = ".")]
-        path: String,
-
-        /// 🔢 Max number of commits to inspect (default: unlimited)
-        #[arg(short, long)]
-        limit: Option<usize>,
-
-        /// 🔽 Sort descending by number of commits
-        #[arg(long)]
-        sort_desc: bool,
-    },
+    Stats(commands::Stats),
 
     /// 🏆 Most prolific authors since a given date
-    TopAuthors {
-        /// 📁 Path to the Git repo
-        #[arg(short, long, default_value = ".")]
-        path: String,
-
-        /// 🗓 Only include commits on or after this date (YYYY-MM-DD)
-        #[arg(short, long)]
-        since: Option<NaiveDate>,
-    },
+    TopAuthors(commands::TopAuthors),
 
     /// 🧑‍💻 Show first and last commit dates for one author
-    AuthorActivity {
-        /// 📁 Path to the Git repo
-        #[arg(short, long, default_value = ".")]
-        path: String,
-
-        /// ✉️ Author email (exact match)
-        #[arg(short, long)]
-        author: String,
-    },
+    AuthorActivity(commands::AuthorActivity),
 
     /// 👀 Who wrote which lines of a file
-    BlameSummary {
-        /// 📄 File to analyze (inside the repo)
-        #[arg(short, long)]
-        file: String,
-
-        /// 📁 Path to the Git repo
-        #[arg(short, long, default_value = ".")]
-        path: String,
-
-        #[arg(long)]
-        json: bool,
-    },
+    BlameSummary(commands::BlameSummary),
 
     /// 📁 Per-author commit heatmap by file
-    FileContributions {
-        /// 📁 Path to the Git repo
-        #[arg(short, long, default_value = ".")]
-        path: String,
-
-        #[arg(long)]
-        json: bool,
-    },
+    FileContributions(commands::FileContributions),
 
     /// 🕒 Commit time-of-day distribution
-    CommitTimes {
-        /// 📁 Path to the Git repo
-        #[arg(short, long, default_value = ".")]
-        path: String,
-
-        #[arg(long)]
-        json: bool,
-    },
+    CommitTimes(commands::CommitTimes),
 
     /// 🥇 First commit by each author
-    FirstCommits {
-        /// 📁 Path to the Git repo
-        #[arg(short, long, default_value = ".")]
-        path: String,
-
-        #[arg(long)]
-        json: bool,
-    },
+    FirstCommits(commands::FirstCommits),
 
     /// 🤝 Top co-authors (shared files)
-    TopCoauthors {
-        /// 📁 Path to the Git repo
-        #[arg(short, long, default_value = ".")]
-        path: String,
-
-        #[arg(long)]
-        json: bool,
-    },
+    TopCoauthors(commands::TopCoauthors),
 
     /// 🚍 Bus factor warnings
-    BusFactor {
-        /// 📁 Path to the Git repo
-        #[arg(short, long, default_value = ".")]
-        path: String,
-
-        #[arg(long)]
-        json: bool,
-
-        /// 🚨 Ownership % threshold for warning (default: 0.75)
-        #[arg(long, default_value = "0.75")]
-        threshold: f64,
-    },
+    BusFactor(commands::BusFactor),
 }
 
