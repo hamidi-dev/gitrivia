@@ -17,7 +17,8 @@ pub fn file_contributions(repo: &Repository) -> Result<BTreeMap<String, BTreeMap
             diff.deltas().for_each(|delta| {
                 if let Some(path) = delta.new_file().path().and_then(|p| p.to_str()) {
                     let email = commit.author().email().unwrap_or("unknown").to_string();
-                    *file_authors.entry(path.to_string())
+                    *file_authors
+                        .entry(path.to_string())
                         .or_default()
                         .entry(email)
                         .or_default() += 1;
@@ -27,4 +28,3 @@ pub fn file_contributions(repo: &Repository) -> Result<BTreeMap<String, BTreeMap
     }
     Ok(file_authors)
 }
-

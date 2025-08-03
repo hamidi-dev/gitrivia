@@ -1,5 +1,5 @@
-use clap::{Parser, Subcommand};
 use crate::commands;
+use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(
@@ -53,4 +53,3 @@ pub enum CliCommand {
     /// ♨️ Churn (recent file/directory volatility)
     Churn(commands::Churn),
 }
-

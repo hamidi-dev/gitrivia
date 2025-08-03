@@ -39,4 +39,3 @@ pub fn top_coauthors(repo: &Repository) -> Result<BTreeMap<String, usize>> {
     }
     Ok(pairs)
 }
-

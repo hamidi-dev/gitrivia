@@ -1,11 +1,11 @@
+use crate::commands::Global;
+use crate::domain::{coauthors, git::RepoExt};
 use anyhow::Result;
 use clap::Args;
-use crate::domain::{git::RepoExt, coauthors};
-use crate::commands::Global;
 
 #[derive(Debug, Args)]
 pub struct TopCoauthors {
-    #[arg(short, long, default_value=".")]
+    #[arg(short, long, default_value = ".")]
     pub path: String,
     #[arg(long)]
     pub json: bool,
@@ -25,4 +25,3 @@ impl super::Runnable for TopCoauthors {
         Ok(())
     }
 }
-

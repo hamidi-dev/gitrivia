@@ -10,13 +10,20 @@ pub fn first_commits(repo: &Repository) -> Result<BTreeMap<String, DateTime<Loca
 
     for oid in rw.flatten() {
         let commit = repo.find_commit(oid)?;
-        let dt = Local.timestamp_opt(commit.time().seconds(), 0).single().unwrap();
+        let dt = Local
+            .timestamp_opt(commit.time().seconds(), 0)
+            .single()
+            .unwrap();
         let email = commit.author().email().unwrap_or("unknown").to_string();
 
-        firsts.entry(email.clone())
-            .and_modify(|d| if dt < *d { *d = dt })
+        firsts
+            .entry(email.clone())
+            .and_modify(|d| {
+                if dt < *d {
+                    *d = dt
+                }
+            })
             .or_insert(dt);
     }
     Ok(firsts)
 }
-

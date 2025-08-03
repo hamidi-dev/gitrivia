@@ -14,4 +14,3 @@ pub fn blame_counts(repo: &Repository, file: &Path) -> Result<BTreeMap<String, u
     }
     Ok(counts)
 }
-

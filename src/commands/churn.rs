@@ -4,8 +4,8 @@ use comfy_table::{presets::UTF8_HORIZONTAL_ONLY, Table};
 use serde_json::json;
 
 use crate::commands::Global;
-use crate::domain::{bus_factor::ScanOpts, churn};
 use crate::domain::git::RepoExt;
+use crate::domain::{bus_factor::ScanOpts, churn};
 
 #[derive(Debug, Args)]
 pub struct Churn {
@@ -34,7 +34,11 @@ impl super::Runnable for Churn {
         let json = self.json || g.json;
 
         let repo = RepoExt::open(&self.path)?;
-        let opts = ScanOpts { all: self.all, include_ext: self.include_ext.clone(), min_total: self.min_total };
+        let opts = ScanOpts {
+            all: self.all,
+            include_ext: self.include_ext.clone(),
+            min_total: self.min_total,
+        };
         let mut entries = churn::compute_churn(repo.repo(), self.window_days, &opts)?;
 
         if self.by == "dir" {
@@ -48,7 +52,8 @@ impl super::Runnable for Churn {
                 v.2 += e.dels;
                 v.3 += e.touches;
             }
-            let mut dir_rows: Vec<_> = by_dir.into_iter()
+            let mut dir_rows: Vec<_> = by_dir
+                .into_iter()
                 .map(|(dir, (churn, adds, dels, touches))| (dir, churn, adds, dels, touches))
                 .collect();
             dir_rows.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
@@ -67,8 +72,13 @@ impl super::Runnable for Churn {
             }
 
             let mut t = Table::new();
-            t.load_preset(UTF8_HORIZONTAL_ONLY)
-                .set_header(vec!["Directory", "Churn", "Adds", "Dels", "Touches"]);
+            t.load_preset(UTF8_HORIZONTAL_ONLY).set_header(vec![
+                "Directory",
+                "Churn",
+                "Adds",
+                "Dels",
+                "Touches",
+            ]);
 
             for (dir, churn, adds, dels, touches) in dir_rows.into_iter().take(self.limit) {
                 t.add_row(vec![
@@ -80,7 +90,10 @@ impl super::Runnable for Churn {
                 ]);
             }
 
-            println!("♨️  Churn (last {} days) — by directory (depth {})", self.window_days, self.depth);
+            println!(
+                "♨️  Churn (last {} days) — by directory (depth {})",
+                self.window_days, self.depth
+            );
             println!("{t}");
             return Ok(());
         }
@@ -112,10 +125,9 @@ impl super::Runnable for Churn {
             ]);
         }
 
-       println!("♨️  Churn (last {} days) — by file", self.window_days);
+        println!("♨️  Churn (last {} days) — by file", self.window_days);
 
         println!("{t}");
         Ok(())
     }
 }
-

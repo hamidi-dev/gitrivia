@@ -1,11 +1,14 @@
+use crate::commands::Global;
+use crate::{
+    domain::{firsts, git::RepoExt},
+    utils::fmt_date,
+};
 use anyhow::Result;
 use clap::Args;
-use crate::{domain::{git::RepoExt, firsts}, utils::fmt_date};
-use crate::commands::Global;
 
 #[derive(Debug, Args)]
 pub struct FirstCommits {
-    #[arg(short, long, default_value=".")]
+    #[arg(short, long, default_value = ".")]
     pub path: String,
     #[arg(long)]
     pub json: bool,
@@ -14,11 +17,12 @@ pub struct FirstCommits {
 impl super::Runnable for FirstCommits {
     fn run(self, g: &Global) -> Result<()> {
         let repo = RepoExt::open(&self.path)?;
-        let map  = firsts::first_commits(repo.repo())?;
+        let map = firsts::first_commits(repo.repo())?;
         if g.json || self.json {
-            let as_str = map.into_iter()
-                .map(|(k,v)| (k, fmt_date(v)))
-                .collect::<std::collections::BTreeMap<_,_>>();
+            let as_str = map
+                .into_iter()
+                .map(|(k, v)| (k, fmt_date(v)))
+                .collect::<std::collections::BTreeMap<_, _>>();
             println!("{}", serde_json::to_string_pretty(&as_str)?);
         } else {
             for (email, dt) in map {
@@ -28,4 +32,3 @@ impl super::Runnable for FirstCommits {
         Ok(())
     }
 }
-

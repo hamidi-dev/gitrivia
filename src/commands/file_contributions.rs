@@ -1,11 +1,11 @@
+use crate::commands::Global;
+use crate::domain::{files, git::RepoExt};
 use anyhow::Result;
 use clap::Args;
-use crate::domain::{git::RepoExt, files};
-use crate::commands::Global;
 
 #[derive(Debug, Args)]
 pub struct FileContributions {
-    #[arg(short, long, default_value=".")]
+    #[arg(short, long, default_value = ".")]
     pub path: String,
     #[arg(long)]
     pub json: bool,
@@ -28,4 +28,3 @@ impl super::Runnable for FileContributions {
         Ok(())
     }
 }
-

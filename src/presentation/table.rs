@@ -1,13 +1,15 @@
 use crate::domain::stats::{AuthorMeta, CommitStats};
 use crate::utils::fmt_date;
-use comfy_table::{Table, presets::UTF8_HORIZONTAL_ONLY};
+use comfy_table::{presets::UTF8_HORIZONTAL_ONLY, Table};
 
-fn sorted_entries<'a>(stats: &'a CommitStats, desc: bool)
-    -> Vec<(&'a String, &'a AuthorMeta)>
-{
+fn sorted_entries<'a>(stats: &'a CommitStats, desc: bool) -> Vec<(&'a String, &'a AuthorMeta)> {
     let mut entries: Vec<_> = stats.data.iter().collect();
     entries.sort_by(|a, b| {
-        if desc { b.1.count.cmp(&a.1.count) } else { a.1.count.cmp(&b.1.count) }
+        if desc {
+            b.1.count.cmp(&a.1.count)
+        } else {
+            a.1.count.cmp(&b.1.count)
+        }
     });
     entries
 }
@@ -19,14 +21,17 @@ pub fn author_stats_top(stats: &CommitStats, desc: bool, n: usize) -> String {
 }
 
 fn entries_to_rows(entries: Vec<(&String, &AuthorMeta)>) -> Vec<[String; 4]> {
-    entries.into_iter().map(|(email, m)| {
-        [
-            email.clone(),
-            m.count.to_string(),
-            fmt_date(m.first),
-            fmt_date(m.last),
-        ]
-    }).collect()
+    entries
+        .into_iter()
+        .map(|(email, m)| {
+            [
+                email.clone(),
+                m.count.to_string(),
+                fmt_date(m.first),
+                fmt_date(m.last),
+            ]
+        })
+        .collect()
 }
 
 fn render(rows: Vec<[String; 4]>) -> String {
@@ -38,4 +43,3 @@ fn render(rows: Vec<[String; 4]>) -> String {
     }
     t.to_string()
 }
-
