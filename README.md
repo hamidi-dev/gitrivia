@@ -1,5 +1,7 @@
 # 🧠 gitrivia
 
+![stats](./screenshots/stats.jpeg) 
+
 A fast Rust CLI to explore **who did what, when, and how much** in any Git repo.
 Great for engineers, tech leads, and curious code archaeologists 🧬.
 
