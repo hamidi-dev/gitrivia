@@ -7,10 +7,17 @@ use anyhow::Result;
 use clap::Args;
 use serde_json::json;
 
+/// Show the active commit range for a single author.
+///
+/// Prints the first and last commit dates along with total commit count
+/// for the specified author.
 #[derive(Debug, Args)]
 pub struct AuthorActivity {
+    /// Path to the Git repository. Defaults to the current directory.
     #[arg(short, long, default_value = ".")]
     pub path: String,
+
+    /// Email address to match exactly when searching commits.
     #[arg(short, long)]
     pub author: String,
 }

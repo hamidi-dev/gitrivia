@@ -5,10 +5,19 @@ use chrono::{Local, NaiveDate, TimeZone};
 use clap::Args;
 use serde_json::json;
 
+/// Rank authors by number of commits.
+///
+/// Useful for identifying the most active contributors over the entire
+/// history or since a specific date.
 #[derive(Debug, Args)]
 pub struct TopAuthors {
+    /// Path to the Git repository to analyse.
+    /// Defaults to the current directory.
     #[arg(short, long, default_value = ".")]
     pub path: String,
+
+    /// Only include commits on or after this date (YYYY-MM-DD).
+    /// If omitted, the full commit history is considered.
     #[arg(short, long)]
     pub since: Option<NaiveDate>,
 }

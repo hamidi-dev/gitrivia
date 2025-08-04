@@ -6,30 +6,61 @@ use crate::commands::Global;
 use crate::domain::{bus_factor, git::RepoExt};
 use comfy_table::{presets::UTF8_HORIZONTAL_ONLY, Table};
 
+/// Detect single‑author dominance in files or directories.
+///
+/// In "blame" mode the command calculates line ownership using `git blame`.
+/// The `--fast` option switches to a quicker heuristic based on recent
+/// touches which trades accuracy for speed.
 #[derive(Debug, Args)]
 pub struct BusFactor {
+    /// Path to the Git repository to scan.
     #[arg(short, long, default_value = ".")]
     pub path: String,
+
+    /// Emit JSON even when the global flag is not set.
     #[arg(long)]
     pub json: bool,
+
+    /// Ownership ratio above which a path is flagged as risky.
+    /// Value is between 0 and 1 (e.g. 0.75 = 75%).
     #[arg(long, default_value = "0.75")]
     pub threshold: f64,
+
+    /// Use the fast heuristic based on commit touches instead of blame.
+    /// Useful for very large repositories.
     #[arg(long)]
     pub fast: bool,
+
+    /// When in fast mode, inspect at most this many recent commits.
+    /// Use 0 to scan the entire history.
     #[arg(long, default_value = "5000")]
     pub max_commits: usize,
+
+    /// Include all files, even those normally filtered out.
     #[arg(long)]
     pub all: bool,
+
+    /// Additional file extensions to include (comma‑separated).
     #[arg(long, value_delimiter = ',')]
     pub include_ext: Vec<String>,
+
+    /// Ignore paths with fewer total lines/touches than this value.
     #[arg(long, default_value = "10")]
     pub min_total: usize,
+
+    /// Aggregate results by individual file or by directory.
     #[arg(long, value_parser = ["file","dir"], default_value = "file")]
     pub by: String,
+
+    /// Directory depth to retain when `--by dir` is used.
     #[arg(long, default_value = "2")]
     pub depth: usize,
+
+    /// Maximum number of rows to display in human‑readable output.
     #[arg(long, default_value = "20")]
     pub limit: usize,
+
+    /// Number of threads for blame analysis (0 = auto).
     #[arg(long, default_value = "0")]
     pub threads: usize,
 }

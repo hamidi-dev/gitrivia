@@ -3,10 +3,16 @@ use crate::domain::{git::RepoExt, times};
 use anyhow::Result;
 use clap::Args;
 
+/// Aggregate commit counts into hourly buckets for each author.
+///
+/// Reveals work patterns or time‑zone differences within the team.
 #[derive(Debug, Args)]
 pub struct CommitTimes {
+    /// Path to the Git repository to analyse.
     #[arg(short, long, default_value = ".")]
     pub path: String,
+
+    /// Emit JSON even when the global flag is not set.
     #[arg(long)]
     pub json: bool,
 }

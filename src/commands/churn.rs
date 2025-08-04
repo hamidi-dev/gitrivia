@@ -7,24 +7,45 @@ use crate::commands::Global;
 use crate::domain::git::RepoExt;
 use crate::domain::{bus_factor::ScanOpts, churn};
 
+/// Rank paths by recent weighted change activity.
+///
+/// Useful for spotting hotspots or volatile areas of the repository over
+/// a configurable time window.
 #[derive(Debug, Args)]
 pub struct Churn {
+    /// Path to the Git repository.
     #[arg(short, long, default_value = ".")]
     pub path: String,
+
+    /// Number of days of history to include when calculating churn.
     #[arg(long, default_value = "90")]
     pub window_days: i64,
+
+    /// Aggregate results by individual file or by directory.
     #[arg(long, value_parser = ["file","dir"], default_value = "file")]
     pub by: String,
+
+    /// Directory depth to retain when `--by dir` is used.
     #[arg(long, default_value = "2")]
     pub depth: usize,
+
+    /// Include all files even if normally filtered out.
     #[arg(long)]
     pub all: bool,
+
+    /// Additional file extensions to include (comma‑separated).
     #[arg(long, value_delimiter = ',')]
     pub include_ext: Vec<String>,
+
+    /// Ignore paths with fewer lines/touches than this value.
     #[arg(long, default_value = "1")]
     pub min_total: usize,
+
+    /// Maximum number of rows to display in human‑readable output.
     #[arg(long, default_value = "20")]
     pub limit: usize,
+
+    /// Emit JSON even when the global flag is not set.
     #[arg(long)]
     pub json: bool,
 }

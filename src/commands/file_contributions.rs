@@ -3,10 +3,17 @@ use crate::domain::{files, git::RepoExt};
 use anyhow::Result;
 use clap::Args;
 
+/// Show per‑file commit counts broken down by author.
+///
+/// Useful for visualising file ownership or building heatmaps for
+/// routing pull requests.
 #[derive(Debug, Args)]
 pub struct FileContributions {
+    /// Path to the Git repository to inspect.
     #[arg(short, long, default_value = ".")]
     pub path: String,
+
+    /// Emit JSON even when the global flag is not set.
     #[arg(long)]
     pub json: bool,
 }

@@ -3,10 +3,16 @@ use crate::domain::{coauthors, git::RepoExt};
 use anyhow::Result;
 use clap::Args;
 
+/// Identify author pairs that frequently touch the same files.
+///
+/// Helps uncover collaboration clusters or potential review buddies.
 #[derive(Debug, Args)]
 pub struct TopCoauthors {
+    /// Path to the Git repository.
     #[arg(short, long, default_value = ".")]
     pub path: String,
+
+    /// Emit JSON even when the global flag is not set.
     #[arg(long)]
     pub json: bool,
 }

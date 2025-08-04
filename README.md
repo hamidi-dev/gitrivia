@@ -345,6 +345,187 @@ gitrivia top-coauthors --json | jq
 
 ---
 
+## 🧮 Metric cheat‑sheet
+
+These are the metrics you’ll see in `gitrivia stats`. Each item includes:
+**What it is**, **how we compute it**, **how to read it**, and **things to watch out for**.
+
+> Notation used below:
+>
+> * *commits(author)* = number of commits by that author
+> * *total\_commits* = total commits in the repo
+> * *share(author)* = commits(author) / total\_commits
+
+---
+
+### Drive‑by ratio
+
+**What:** How many contributors made only a tiny number of commits.
+
+**Formula:**
+
+```
+(#authors with ≤ 2 commits / total authors) × 100
+```
+
+**Read it:**
+
+* **High** → lots of one‑off or occasional contributors (e.g., quick fixes).
+* **Low**  → a stable core team contributing repeatedly.
+
+**Example:** If 20 out of 50 authors have ≤2 commits → 40%.
+
+**Watch out:** Bot accounts or email aliases can skew this. Consider filtering bots.
+
+---
+
+### Core size (80%)
+
+**What:** Minimum number of top contributors who together produce at least 80% of all commits.
+
+**How:** Sort authors by commits (desc), then accumulate until you reach ≥ 80% of *total\_commits*; count how many authors that took.
+
+**Read it:**
+
+* **Small** core size → very concentrated work (few people do most of it).
+* **Large** core size → more distributed contributions.
+
+**Example:** If the top 6 authors cover ≥80% of commits, core size (80%) = 6.
+
+**Watch out:** Commit count ≠ effort/LOC; it’s a good proxy but not perfect.
+
+---
+
+### HHI (Herfindahl‑Hirschman Index) / Gini
+
+**What:** Both measure **concentration** of contributions across authors.
+
+**Formulas:**
+
+* `share(author) = commits(author) / total_commits`
+* **HHI:** `Σ share(author)²` (sums over all authors). Range ≈ **1/N … 1**.
+
+  * Closer to **1** → a single dominant contributor.
+  * Closer to **1/N** → evenly spread across N authors.
+* **Gini:** standard inequality index on the commit count distribution. Range **0 … 1**.
+
+  * **0** → perfectly equal (everyone contributes the same number of commits).
+  * **1** → perfectly unequal (one person does everything).
+
+**Read it:** Higher HHI/Gini → more concentrated ownership.
+
+**Example:** If two authors split 50/50, HHI = 0.5² + 0.5² = **0.50**; Gini is low.
+
+**Watch out:** Based on **counts**, not lines/complexity; still very helpful at a glance.
+
+---
+
+### Longest idle gap
+
+**What:** The longest pause (in days) between two consecutive commits.
+
+**How:** Sort commit **dates** and compute the largest day‑to‑day gap.
+
+**Read it:** Big numbers hint at long lulls (e.g., pre‑release freeze, repo abandonment).
+
+**Example:** If the largest gap between any two commit dates is 41 days → **41**.
+
+**Watch out:** Multiple commits on the same day don’t affect the max gap.
+
+---
+
+### Momentum (90d)
+
+**What:** How much of the repo’s lifetime work happened **recently**.
+
+**Formula:**
+
+```
+(commits in last 90 days / total_commits) × 100
+```
+
+**Read it:**
+
+* **High** → the project is very active right now.
+* **Low**  → most work happened in the past.
+
+**Example:** If 200 of 2,000 commits are from the last 90d → 10%.
+
+**Watch out:** Uses the repo’s **latest commit timestamp** as “now”. Old repos with no recent work will show low momentum by design.
+
+---
+
+### Work‑hours %
+
+**What:** Share of commits made during **09:00–17:59** *local time of the machine running gitrivia*.
+
+**Formula:**
+
+```
+(commits with local_time in 09:00–17:59 / total_commits) × 100
+```
+
+**Read it:** Cultural/process signal (office hours vs. evenings/weekends).
+
+**Example:** If 720 of 1,000 commits fall in 09–17:59 → **72%**.
+
+**Watch out:** Author machines might have wrong clocks; time zone is **your local** machine, not the contributor’s.
+
+---
+
+### Churn (windowed)
+
+**What:** Measures how much code is **changing recently** (hotspots).
+
+**Formula (per file/dir):**
+
+```
+Σ over commits in window: (adds + dels) × weight
+```
+
+Where **weight** decays linearly from 1.0 (newest) to \~0.0 (oldest in window).
+
+**Read it:**
+
+* **High churn + many touches** → unstable area, likely to need attention.
+* **High churn + few touches** → large rewrites; check tests/review coverage.
+
+**Example:** A file changed 10, 20, and 30 lines across three recent commits → base = 60; weighted by recency you might see \~45–55 depending on dates.
+
+**Watch out:** For speed, churn does **not** enable rename detection by default—big renames can look like add+delete. You can make this configurable.
+
+---
+
+### Bus‑factor (per‑path dominance)
+
+**What:** How concentrated ownership is for a file/dir (risk if one person dominates).
+
+**Definition:** `max(author_share)` for that path.
+
+**Two modes:**
+
+* **Accurate (blame):**
+
+  * `author_share = lines_owned(author) / total_lines`
+  * Pros: line‑accurate; Cons: slower (can be parallelized).
+* **FAST (touches):**
+
+  * `author_share = touches(author) / total_touches` (commit‑level changes)
+  * Pros: very quick; Cons: heuristic (recent bursts can dominate).
+
+**Read it:**
+
+* Values near **1.0** → single‑owner risk; spread‑out values → healthier.
+
+**Example:** If Alice owns 780/1,000 lines → 0.78 (78%). With touches, if Alice made 39 of 50 touches → 0.78 as well.
+
+**Watch out:**
+
+* Accurate mode can flag vendor/lock files—use extension filters (`--all` / `--include-ext`).
+* FAST mode is recency‑biased; great for triage, not for compliance.
+
+---
+
 ## 📦 Roadmap
 
 * Global `--since` / `--until` on all commands
@@ -355,19 +536,6 @@ gitrivia top-coauthors --json | jq
 
 ---
 
-## 🧮 Metric cheat‑sheet
-
-* **Drive‑by ratio** — % of authors with ≤2 commits (higher → many one‑offs).
-* **Core size (80%)** — minimal #authors to cover 80% of commits.
-* **HHI / Gini** — contribution concentration (higher → dominated by few).
-* **Longest idle gap** — largest pause between two commits (days).
-* **Momentum (90d)** — % of lifetime commits in last 90 days.
-* **Work‑hours %** — share of commits 09:00–17:59 (local).
-* **Churn** — weighted (adds+dels) over a time window (newer changes weigh more).
-* **Bus‑factor** — top owner’s share (lines via blame, or touches in FAST mode).
-
----
-
 ## 🦀 Built with
 
 * [git2](https://crates.io/crates/git2)
@@ -375,5 +543,5 @@ gitrivia top-coauthors --json | jq
 * [serde](https://crates.io/crates/serde)
 * Rust. Obviously.
 
-PRs welcome. Or don’t. I’m not your boss. 😎
+PRs welcome :)
 

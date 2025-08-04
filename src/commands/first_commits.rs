@@ -6,10 +6,16 @@ use crate::{
 use anyhow::Result;
 use clap::Args;
 
+/// List when each contributor made their first commit.
+///
+/// Helps gauge longevity of contributors or find long‑term maintainers.
 #[derive(Debug, Args)]
 pub struct FirstCommits {
+    /// Path to the Git repository to analyse.
     #[arg(short, long, default_value = ".")]
     pub path: String,
+
+    /// Emit JSON even when the global flag is not set.
     #[arg(long)]
     pub json: bool,
 }

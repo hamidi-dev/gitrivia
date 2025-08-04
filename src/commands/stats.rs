@@ -9,17 +9,26 @@ use crate::{
     utils::fmt_date,
 };
 
+/// Summarise repository health and highlight top contributors.
+///
+/// The command scans commit history to produce high‑level metrics such as
+/// active period, momentum and merge/revert rates. It also prints the top
+/// five authors overall and for the last 12 months.
 #[derive(Debug, Args)]
 pub struct Stats {
-    /// Path to the Git repo
+    /// Path to the Git repository to inspect.
+    /// Defaults to the current working directory.
     #[arg(short, long, default_value = ".")]
     pub path: String,
 
-    /// Max number of commits to inspect (default: all)
+    /// Only analyse the most recent `N` commits.
+    /// If omitted, the entire history is scanned.
     #[arg(short, long)]
     pub limit: Option<usize>,
 
-    /// Sort descending (overrides global --desc) — default is descending anyway
+    /// Force descending sort order for contributor tables.
+    /// The command defaults to descending, but this flag overrides any
+    /// global `--desc` setting.
     #[arg(long)]
     pub sort_desc: bool,
 }
